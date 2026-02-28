@@ -1,0 +1,111 @@
+:root {
+  font-family: Arial, sans-serif;
+  color: #1f2937;
+  background: #f5f7fb;
+}
+
+body {
+  margin: 0;
+}
+
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.panel {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+label {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+textarea,
+input,
+select,
+button {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.actions button {
+  width: auto;
+}
+
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+button:not(:disabled):hover {
+  background: #1d4ed8;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tabs button {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.tabs button.active {
+  background: #2563eb;
+  color: #fff;
+}
+
+pre {
+  white-space: pre-wrap;
+  background: #f3f4f6;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.error {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.output-format {
+  margin-top: 8px;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
