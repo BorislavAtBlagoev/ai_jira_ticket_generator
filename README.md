@@ -90,7 +90,7 @@ No API keys are required.
    docker compose up --build
    ```
 
-   On startup, the Ollama service automatically pulls the configured model and persists it in a Docker volume.
+   On startup, Docker Compose waits for Ollama to become healthy, then a one-shot `ollama-pull` service pulls the configured model and persists it in a Docker volume before the backend starts.
 
 4. Open:
    - Frontend: `http://localhost:5173`
