@@ -1,10 +1,11 @@
 # AI Jira Ticket Generator (Local Docker App)
 
-AI Jira Ticket Generator is a small local-only web app that helps you draft Jira tickets using OpenAI.
+AI Jira Ticket Generator is a small local-only web app that helps you draft Jira tickets using a fully local Ollama model.
 It includes:
 
 - **FastAPI backend** for validation, AI generation, and markdown rendering.
 - **React + Vite frontend** for form input, preview, markdown/json tabs, and download/copy actions.
+- **Ollama service** for local model inference (default: `llama3`).
 - **Docker Compose** setup so the app runs on a clean machine with only Docker installed.
 
 ## Features
@@ -27,7 +28,7 @@ It includes:
 - Backend API:
   - `GET /api/health` -> `{ "status": "ok" }`
   - `POST /api/generate`
-- OpenAI Structured Outputs via `json_schema` to enforce predictable response format.
+- Local structured generation via Ollama JSON output mode.
 
 ## Requirements
 
@@ -35,6 +36,7 @@ It includes:
 - Docker Compose (v2)
 
 No Python or Node installation is required on your host machine.
+No API keys are required.
 
 ## Project Structure
 
@@ -66,7 +68,7 @@ No Python or Node installation is required on your host machine.
 └── README.md
 ```
 
-## Setup (Local Only)
+## Setup (100% Local)
 
 1. Copy environment template:
 
@@ -74,18 +76,21 @@ No Python or Node installation is required on your host machine.
    cp .env.example .env
    ```
 
-2. Edit `.env` and set your OpenAI key:
+2. (Optional) choose model in `.env`:
 
    ```dotenv
-   OPENAI_API_KEY=your_real_key
-   OPENAI_MODEL=gpt-4o-mini
+   OLLAMA_MODEL=llama3
    ```
+
+   Alternative supported model: `mistral`.
 
 3. Start the app:
 
    ```bash
    docker compose up --build
    ```
+
+   On startup, the Ollama service automatically pulls the configured model and persists it in a Docker volume.
 
 4. Open:
    - Frontend: `http://localhost:5173`
@@ -173,8 +178,7 @@ This is configured in `docker-compose.yml`.
 
 ## Error Handling
 
-- Missing `OPENAI_API_KEY` returns a visible backend error.
-- OpenAI request failures are returned as API errors and shown in the UI.
+- Ollama connectivity/model failures are returned as API errors and shown in the UI.
 - Validation errors are returned by FastAPI and shown in the UI.
 
 ## Important Notes

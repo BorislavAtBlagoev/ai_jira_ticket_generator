@@ -4,7 +4,7 @@ import json
 import os
 from typing import Any
 
-from openai import OpenAI
+import httpx
 
 from .models import GenerateRequest, GenerateResponse
 
@@ -75,42 +75,47 @@ def _response_schema() -> dict[str, Any]:
     }
 
 
-def generate_ticket(payload: GenerateRequest) -> GenerateResponse:
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY is not configured")
-
-    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-    client = OpenAI(api_key=api_key)
-
-    user_labels = parse_labels(payload.labels)
+def _build_prompt(payload: GenerateRequest, user_labels: list[str]) -> str:
     labels_text = ", ".join(user_labels) if user_labels else "(none provided)"
-
-    user_prompt = (
-        f"Ticket details:\n{payload.ticket_details}\n\n"
+    schema = json.dumps(_response_schema(), ensure_ascii=False)
+    return (
+        f"{SYSTEM_PROMPT}\n\n"
+        "Return only JSON, with no markdown, no code fences, and no extra text.\n"
+        "The response MUST validate against this JSON schema exactly:\n"
+        f"{schema}\n\n"
+        "Ticket details:\n"
+        f"{payload.ticket_details}\n\n"
         f"Issue type: {payload.issue_type.value}\n"
         f"Priority: {payload.priority.value}\n"
         f"Project key: {payload.project_key or '(not provided)'}\n"
         f"User labels (must be preserved in final labels list): {labels_text}\n"
     )
 
-    response = client.responses.create(
-        model=model,
-        input=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
-        text={
-            "format": {
-                "type": "json_schema",
-                "name": "jira_ticket",
-                "strict": True,
-                "schema": _response_schema(),
-            }
-        },
-    )
 
-    content = response.output_text
+def generate_ticket(payload: GenerateRequest) -> GenerateResponse:
+    ollama_url = os.getenv("OLLAMA_URL", "http://ollama:11434")
+    ollama_model = os.getenv("OLLAMA_MODEL", "llama3")
+
+    user_labels = parse_labels(payload.labels)
+
+    request_payload = {
+        "model": ollama_model,
+        "prompt": _build_prompt(payload, user_labels),
+        "format": "json",
+        "stream": False,
+    }
+
+    try:
+        with httpx.Client(timeout=90) as client:
+            response = client.post(f"{ollama_url}/api/generate", json=request_payload)
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise RuntimeError(f"Ollama request failed: {exc}") from exc
+
+    content = response.json().get("response", "")
+    if not content:
+        raise RuntimeError("Ollama returned an empty response")
+
     parsed = json.loads(content)
 
     parsed["labels"] = merge_labels(user_labels, parsed.get("labels", []))
