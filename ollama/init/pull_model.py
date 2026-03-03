@@ -69,6 +69,20 @@ def pull_model(model_name: str) -> None:
             if line:
                 log(f"pull progress: {line}")
 
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    # Keep logging plain-text/partial lines from the streaming API.
+                    continue
+
+                status = str(event.get("status", "")).strip().lower()
+                if status == "success" or event.get("done") is True:
+                    log(f"Model '{model_name}' pull completed.")
+                    break
+
+                if "error" in event:
+                    raise RuntimeError(f"Ollama pull error: {event['error']}")
+
 
 def main() -> int:
     log(f"Target model: {MODEL_NAME}")
