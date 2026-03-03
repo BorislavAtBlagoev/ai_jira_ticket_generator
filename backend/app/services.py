@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Any
 
 import httpx
@@ -114,7 +115,7 @@ def generate_ticket(payload: GenerateRequest) -> GenerateResponse:
     if not content:
         raise RuntimeError("Ollama returned an empty response")
 
-    parsed = json.loads(content)
+    parsed = _parse_ollama_response(content)
 
     parsed["labels"] = merge_labels(user_labels, parsed.get("labels", []))
     parsed["project_key"] = payload.project_key or None
@@ -122,6 +123,31 @@ def generate_ticket(payload: GenerateRequest) -> GenerateResponse:
     parsed["priority"] = payload.priority.value
 
     return GenerateResponse.model_validate(parsed)
+
+
+def _parse_ollama_response(content: str) -> dict[str, Any]:
+    cleaned = content.strip()
+
+    # Ollama occasionally wraps JSON in markdown fences despite prompt instructions.
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, count=1, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s*```$", "", cleaned)
+
+    decoder = json.JSONDecoder()
+
+    # Handle responses with trailing non-JSON text by decoding the first object only.
+    try:
+        parsed, _ = decoder.raw_decode(cleaned)
+    except json.JSONDecodeError:
+        try:
+            parsed = json.loads(cleaned)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(f"Failed to parse JSON from Ollama response: {exc}") from exc
+
+    if not isinstance(parsed, dict):
+        raise RuntimeError("Ollama response JSON must be an object")
+
+    return parsed
 
 
 def to_markdown(ticket: GenerateResponse) -> str:
