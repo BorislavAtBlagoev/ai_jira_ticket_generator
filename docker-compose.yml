@@ -9,8 +9,8 @@ services:
       - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
     depends_on:
       ollama:
-        condition: service_healthy
-      ollama-pull:
+        condition: service_started
+      ollama-init:
         condition: service_completed_successfully
 
   frontend:
@@ -25,28 +25,23 @@ services:
 
   ollama:
     image: ollama/ollama:latest
-    volumes:
-      - ollama_data:/root/.ollama
+    command: ["ollama", "serve"]
     ports:
       - "11434:11434"
-    command: ["serve"]
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:11434/api/tags"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
+    volumes:
+      - ollama_data:/root/.ollama
 
-  ollama-pull:
-    image: curlimages/curl:8.7.1
+  ollama-init:
+    build:
+      context: ./ollama/init
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
     depends_on:
       ollama:
-        condition: service_healthy
-    environment:
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
-    command: >
-      sh -c "curl -fsS http://ollama:11434/api/pull
-      -H 'Content-Type: application/json'
-      -d '{\"name\":\"'\"$OLLAMA_MODEL\"'\"}'"
+        condition: service_started
+    volumes:
+      - ollama_data:/root/.ollama
     restart: "no"
 
 volumes:
