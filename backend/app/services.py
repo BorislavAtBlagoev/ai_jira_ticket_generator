@@ -77,12 +77,10 @@ def _response_schema() -> dict[str, Any]:
 
 def _build_prompt(payload: GenerateRequest, user_labels: list[str]) -> str:
     labels_text = ", ".join(user_labels) if user_labels else "(none provided)"
-    schema = json.dumps(_response_schema(), ensure_ascii=False)
     return (
         f"{SYSTEM_PROMPT}\n\n"
         "Return only JSON, with no markdown, no code fences, and no extra text.\n"
-        "The response MUST validate against this JSON schema exactly:\n"
-        f"{schema}\n\n"
+        "Use concrete values for every field (never return schema fragments, type definitions, or placeholders).\n\n"
         "Ticket details:\n"
         f"{payload.ticket_details}\n\n"
         f"Issue type: {payload.issue_type.value}\n"
@@ -101,7 +99,7 @@ def generate_ticket(payload: GenerateRequest) -> GenerateResponse:
     request_payload = {
         "model": ollama_model,
         "prompt": _build_prompt(payload, user_labels),
-        "format": "json",
+        "format": _response_schema(),
         "stream": False,
     }
 
