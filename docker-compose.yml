@@ -28,11 +28,12 @@ services:
       - "11434:11434"
     environment:
       - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
+    entrypoint: ["/bin/sh", "-c"]
     command: >
-      /bin/sh -c "ollama serve &
+      ollama serve &
       sleep 5 &&
       ollama pull ${OLLAMA_MODEL:-llama3} &&
-      wait"
+      wait
 
 volumes:
   ollama_data:
