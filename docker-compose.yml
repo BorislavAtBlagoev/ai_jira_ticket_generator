@@ -32,7 +32,7 @@ services:
     command: >
       ollama serve &
       sleep 5 &&
-      ollama pull ${OLLAMA_MODEL:-llama3} &&
+      curl -fsS -H 'Content-Type: application/json' http://127.0.0.1:11434/api/pull -d '{"name":"'"${OLLAMA_MODEL:-llama3}"'"}' &&
       wait
 
 volumes:
