@@ -6,12 +6,12 @@ services:
       - "8000:8000"
     environment:
       - OLLAMA_URL=http://ollama:11434
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-tinyllama}
     depends_on:
       ollama:
         condition: service_started
-      ollama-init:
-        condition: service_completed_successfully
+    #   ollama-init:
+    #     condition: service_completed_successfully
 
   frontend:
     build:
@@ -25,7 +25,7 @@ services:
 
   ollama:
     image: ollama/ollama:latest
-    command: ["ollama", "serve"]
+    command: ["serve"]
     ports:
       - "11434:11434"
     volumes:
@@ -36,7 +36,7 @@ services:
       context: ./ollama/init
     environment:
       - OLLAMA_URL=http://ollama:11434
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-tinyllama}
     depends_on:
       ollama:
         condition: service_started
