@@ -5,7 +5,7 @@ It includes:
 
 - **FastAPI backend** for validation, AI generation, and markdown rendering.
 - **React + Vite frontend** for form input, preview, markdown/json tabs, and download/copy actions.
-- **Ollama service** for local model inference (default: `llama3`).
+- **Ollama service** for local model inference (default: `tinyllama`).
 - **Docker Compose** setup so the app runs on a clean machine with only Docker installed.
 
 ## Features
@@ -79,7 +79,7 @@ No API keys are required.
 2. (Optional) choose model in `.env`:
 
    ```dotenv
-   OLLAMA_MODEL=llama3
+   OLLAMA_MODEL=tinyllama
    ```
 
    Alternative supported model: `mistral`.
