@@ -67,13 +67,20 @@ def pull_model(model_name: str) -> None:
         for raw_line in response:
             line = raw_line.decode("utf-8").strip()
             if line:
-                log(f"pull progress: {line}")
-
                 try:
                     event = json.loads(line)
                 except json.JSONDecodeError:
                     # Keep logging plain-text/partial lines from the streaming API.
+                    log(f"pull progress: {line}")
                     continue
+
+                completed = event.get("completed")
+                total = event.get("total")
+                if isinstance(completed, (int, float)) and isinstance(total, (int, float)) and total > 0:
+                    percentage = min(100.0, max(0.0, (completed / total) * 100))
+                    log(f"pull progress: {percentage:.2f}% ({int(completed)}/{int(total)})")
+                else:
+                    log(f"pull progress: {line}")
 
                 status = str(event.get("status", "")).strip().lower()
                 if status == "success" or event.get("done") is True:
